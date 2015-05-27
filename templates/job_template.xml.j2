@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<com.cloudbees.plugins.flow.BuildFlow plugin="build-flow-plugin">
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <EnvInjectJobProperty plugin="envinject">
+      <info>
+        <propertiesContent>BRANCH={{ git_branch }}</propertiesContent>
+        <loadFilesFromMaster>false</loadFilesFromMaster>
+      </info>
+      <on>true</on>
+      <keepJenkinsSystemVariables>true</keepJenkinsSystemVariables>
+      <keepBuildVariables>true</keepBuildVariables>
+      <overrideBuildParameters>false</overrideBuildParameters>
+      <contributors/>
+    </EnvInjectJobProperty>
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url>{{ git_repo }}</url>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>*/${BRANCH}</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="list"/>
+    <extensions/>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders/>
+  <publishers/>
+  <buildWrappers/>
+  <icon/>
+  <dsl>build_version = env[&apos;SPRINT_NUMBER&apos;] + &quot;.&quot; + build.number
+
+changes_file = build.properties.environment.JENKINS_HOME + &quot;/jobs/&quot; + build.properties.environment.JOB_NAME + &quot;/builds/&quot; + build.number.toString() + &quot;/changelog.xml&quot;
+
+// Get committer e-mail
+mail_command = &quot;egrep -io [a-zA-Z_]+@[a-zA-Z\.]+ &quot; + changes_file
+println mail_command
+
+commiter_mail = mail_command.execute().text
+println commiter_mail
+
+branch = build.properties.environment.BRANCH
+println branch
+</dsl>
+  <buildNeedsWorkspace>true</buildNeedsWorkspace>
+</com.cloudbees.plugins.flow.BuildFlow>
