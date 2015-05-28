@@ -4,9 +4,10 @@ from __future__ import print_function
 
 import git
 import re
+import argparse
+import sys
+from ConfigParser import SafeConfigParser
 from jenkinsapi.jenkins import Jenkins
-
-import configuration as config
 
 
 class JenkinsWorks:
@@ -15,17 +16,21 @@ class JenkinsWorks:
     Wrapper class that provides connection with Jenkins
     """
 
-    def __init__(self):
+    def __init__(self, url, username, password,
+                 repository_path, template_name,
+                 job_prefix, job_suffix, view_prefix, view_suffix):
         """
         JenkinsWorks constructor. Sets necessary variables
         """
-        self.repo_path = config.repository_path
-        self.jenkins_url = config.jenkins_url
-        self.job_prefix = config.job_prefix
-        self.job_suffix = config.job_suffix
-        self.view_prefix = config.view_prefix
-        self.view_suffix = config.view_suffix
-        self.template_name = config.template_name
+        self.jenkins_url = url
+        self.jenkins_username = username
+        self.jenkins_password = password
+        self.repo_path = repository_path
+        self.template_name = template_name
+        self.job_prefix = job_prefix
+        self.job_suffix = job_suffix
+        self.view_prefix = view_prefix
+        self.view_suffix = view_suffix
         self.existing_jobs = []
         self.existing_views = []
         self.branches = []
@@ -36,7 +41,7 @@ class JenkinsWorks:
         """
         Get Jenkins API object
         """
-        self.api = Jenkins(self.jenkins_url)
+        self.api = Jenkins(self.jenkins_url, self.jenkins_username, self.jenkins_password)
         return self.api
 
     def _get_repo_origin(self):
@@ -165,13 +170,105 @@ class JenkinsWorks:
                 self.delete_view(view)
 
 
+def parse_args():
+    """
+    Parse arguments from configuration file and command line
+    """
+    # The next block is done so the configuration file location can be passed
+    # as a command-line parameter and it's content parsed and passed as default
+    # values for the argparse
+    configfile = None
+    for idx, val in enumerate(sys.argv):
+        if val == "-c" or val == "--config":
+            configfile = sys.argv[idx + 1]
+            break
+
+    parent_parser = argparse.ArgumentParser(add_help=False)
+
+    parent_parser.add_argument("-c", "--config",
+                               dest="config_path",
+                               type=str,
+                               help="Path to configuration",
+                               default="configuration.ini")
+    if configfile:
+        parent_args = parent_parser.parse_args(["-c", configfile])
+    else:
+        parent_args = parent_parser.parse_args([])
+
+    config_parser = SafeConfigParser()
+    config_parser.read(parent_args.config_path)
+
+    parser = argparse.ArgumentParser(parents=[parent_parser])
+
+    parser.add_argument("-a", "--address",
+                        dest="jenkins_url",
+                        type=str,
+                        help="Jenkins server URL",
+                        default=config_parser.get('jenkins', 'url'))
+    parser.add_argument("-u", "--username",
+                        dest="jenkins_username",
+                        type=str,
+                        help="Jenkins username",
+                        default=config_parser.get('jenkins', 'username'))
+    parser.add_argument("-p", "--password",
+                        dest="jenkins_password",
+                        type=str,
+                        help="Jenkins password",
+                        default=config_parser.get('jenkins', 'password'))
+    parser.add_argument("-r", "--repository",
+                        dest="repository_path",
+                        type=str,
+                        help="Git repository location",
+                        default=config_parser.get('repository', 'path'))
+    parser.add_argument("-t", "--template",
+                        dest="template_name",
+                        type=str,
+                        help="Jenkins job template name",
+                        default=config_parser.get('template', 'name'))
+    parser.add_argument("--job-prefix",
+                        dest="job_prefix",
+                        type=str,
+                        help="Jenkins job prefix",
+                        default=config_parser.get('job', 'prefix'))
+    parser.add_argument("--job-suffix",
+                        dest="job_suffix",
+                        type=str,
+                        help="Jenkins job suffix",
+                        default=config_parser.get('job', 'suffix'))
+    parser.add_argument("--view-prefix",
+                        dest="view_prefix",
+                        type=str,
+                        help="Jenkins view prefix",
+                        default=config_parser.get('view', 'prefix'))
+    parser.add_argument("--view-suffix",
+                        dest="view_suffix",
+                        type=str,
+                        help="Jenkins view suffix",
+                        default=config_parser.get('view', 'suffix'))
+
+    args = parser.parse_args()
+    return args
+
 def main():
-    jenkins = JenkinsWorks()
+    """
+    Execute useful code
+    """
+
+    args = parse_args()
+
+    jenkins = JenkinsWorks(args.jenkins_url,
+                           args.jenkins_username,
+                           args.jenkins_password,
+                           args.repository_path,
+                           args.template_name,
+                           args.job_prefix,
+                           args.job_suffix,
+                           args.view_prefix,
+                           args.view_suffix)
     jenkins.get_existing_jobs_list()
     jenkins.get_existing_views()
     jenkins.get_branches()
     jenkins.update_jenkins_config()
 
-
 if __name__ == '__main__':
-    exit(main())
+    main()

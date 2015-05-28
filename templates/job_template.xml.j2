@@ -25,7 +25,7 @@
     </userRemoteConfigs>
     <branches>
       <hudson.plugins.git.BranchSpec>
-        <name>*/${BRANCH}</name>
+        <name>*/{{ git_branch }}</name>
       </hudson.plugins.git.BranchSpec>
     </branches>
     <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
@@ -47,7 +47,7 @@
 changes_file = build.properties.environment.JENKINS_HOME + &quot;/jobs/&quot; + build.properties.environment.JOB_NAME + &quot;/builds/&quot; + build.number.toString() + &quot;/changelog.xml&quot;
 
 // Get committer e-mail
-mail_command = &quot;egrep -io [a-zA-Z_]+@[a-zA-Z\.]+ &quot; + changes_file
+mail_command = &quot;egrep -io [a-zA-Z_]+@[a-zA-Z]+\.[a-zA-Z]+&quot; + changes_file
 println mail_command
 
 commiter_mail = mail_command.execute().text

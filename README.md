@@ -1,5 +1,4 @@
-jenkins_job_on_branch
-=======================
+##jenkins_job_on_branch.py
 
 Python script, that generates Jenkins job and view when new branch is pushed to Git.
 
@@ -9,10 +8,45 @@ Sample job template requires the following plugins:
 2. EnvInject
 3. Git Client
 
-Configuration options are defined in `configuration.py`
+Configuration options can be defined in the `configuration.ini` file or via the command line.
 
-License and Authors
--------------------
+##Usage:
+```text
+usage: job_on_branch.py [-h] [-c CONFIG_PATH] [-a JENKINS_URL]
+                        [-u JENKINS_USERNAME] [-p JENKINS_PASSWORD]
+                        [-r REPOSITORY_PATH] [-t TEMPLATE_NAME]
+                        [--job-prefix JOB_PREFIX] [--job-suffix JOB_SUFFIX]
+                        [--view-prefix VIEW_PREFIX]
+                        [--view-suffix VIEW_SUFFIX]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -c CONFIG_PATH, --config CONFIG_PATH
+                        Path to configuration
+  -a JENKINS_URL, --address JENKINS_URL
+                        Jenkins server URL
+  -u JENKINS_USERNAME, --username JENKINS_USERNAME
+                        Jenkins username
+  -p JENKINS_PASSWORD, --password JENKINS_PASSWORD
+                        Jenkins password
+  -r REPOSITORY_PATH, --repository REPOSITORY_PATH
+                        Git repository location
+  -t TEMPLATE_NAME, --template TEMPLATE_NAME
+                        Jenkins job template name
+  --job-prefix JOB_PREFIX
+                        Jenkins job prefix
+  --job-suffix JOB_SUFFIX
+                        Jenkins job suffix
+  --view-prefix VIEW_PREFIX
+                        Jenkins view prefix
+  --view-suffix VIEW_SUFFIX
+                        Jenkins view suffix
+```
+
+Configuration options are defined in `configuration.ini` file by default.
+Script support several options, that can be listed by passing `--help` option to the script.
+
+##License and Authors
 
 - Author:: Rostyslav Fridman (rostyslav.fridman@gmail.com)
 
