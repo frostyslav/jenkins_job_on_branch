@@ -4,20 +4,23 @@ Python script, that generates Jenkins job and view when new branch is pushed to 
 
 Job XML is being generated from the Jinja2 template.
 Sample job template requires the following plugins:
-1. Build Flow
-2. EnvInject
-3. Git Client
+* Build Flow
+* EnvInject
+* Git Client
 
 Configuration options can be defined in the `configuration.ini` file or via the command line.
+Script support several options, that can be listed by passing `--help` option to the script.
+Script can be run in the preview mode without actually modifiying anything by passing `--dry-run` or `--preview` to the command line.
 
 ##Usage:
 ```text
 usage: job_on_branch.py [-h] [-c CONFIG_PATH] [-a JENKINS_URL]
                         [-u JENKINS_USERNAME] [-p JENKINS_PASSWORD]
                         [-r REPOSITORY_PATH] [-t TEMPLATE_NAME]
+                        [--template-location TEMPLATE_LOCATION]
                         [--job-prefix JOB_PREFIX] [--job-suffix JOB_SUFFIX]
                         [--view-prefix VIEW_PREFIX]
-                        [--view-suffix VIEW_SUFFIX]
+                        [--view-suffix VIEW_SUFFIX] [--dry-run]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -31,8 +34,10 @@ optional arguments:
                         Jenkins password
   -r REPOSITORY_PATH, --repository REPOSITORY_PATH
                         Git repository location
-  -t TEMPLATE_NAME, --template TEMPLATE_NAME
+  -t TEMPLATE_NAME, --template-name TEMPLATE_NAME
                         Jenkins job template name
+  --template-location TEMPLATE_LOCATION
+                        Jenkins job template location
   --job-prefix JOB_PREFIX
                         Jenkins job prefix
   --job-suffix JOB_SUFFIX
@@ -41,10 +46,9 @@ optional arguments:
                         Jenkins view prefix
   --view-suffix VIEW_SUFFIX
                         Jenkins view suffix
+  --dry-run, --preview  Execute script in preview mode, without actually
+                        modifying Jenkins configuration
 ```
-
-Configuration options are defined in `configuration.ini` file by default.
-Script support several options, that can be listed by passing `--help` option to the script.
 
 ##License and Authors
 

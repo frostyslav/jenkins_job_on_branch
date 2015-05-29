@@ -17,8 +17,8 @@ class JenkinsWorks:
     """
 
     def __init__(self, url, username, password,
-                 repository_path, template_name,
-                 job_prefix, job_suffix, view_prefix, view_suffix):
+                 repository_path, template_location, template_name,
+                 job_prefix, job_suffix, view_prefix, view_suffix, preview):
         """
         JenkinsWorks constructor. Sets necessary variables
         """
@@ -31,6 +31,7 @@ class JenkinsWorks:
         self.job_suffix = job_suffix
         self.view_prefix = view_prefix
         self.view_suffix = view_suffix
+        self.preview = preview
         self.existing_jobs = []
         self.existing_views = []
         self.branches = []
@@ -41,7 +42,9 @@ class JenkinsWorks:
         """
         Get Jenkins API object
         """
-        self.api = Jenkins(self.jenkins_url, self.jenkins_username, self.jenkins_password)
+        self.api = Jenkins(self.jenkins_url,
+                           self.jenkins_username,
+                           self.jenkins_password)
         return self.api
 
     def _get_repo_origin(self):
@@ -59,8 +62,7 @@ class JenkinsWorks:
         """
         for job in self.api.get_jobs():
             job_instance = self.api.get_job(job[0])
-            if re.match(self.job_prefix + ".*" + self.job_suffix,
-                        job_instance.name):
+            if re.match(self.job_prefix + ".*" + self.job_suffix, job_instance.name):
                 self.existing_jobs.append(job_instance.name)
         return self.existing_jobs
 
@@ -70,8 +72,7 @@ class JenkinsWorks:
         following convention: prefix + branch_name + suffix
         """
         for view_name in self.api.views.keys():
-            if re.match(self.view_prefix + ".*" + self.view_suffix,
-                        view_name):
+            if re.match(self.view_prefix + ".*" + self.view_suffix, view_name):
                 self.existing_views.append(view_name)
         return self.existing_views
 
@@ -108,41 +109,52 @@ class JenkinsWorks:
         rendered from Jinja2 template XML
         """
         print("Creating job: %s" % job_name)
-        self.api.create_job(jobname=job_name, xml=xml)
+        if not self.preview:
+            self.api.create_job(jobname=job_name,
+                                xml=xml)
 
     def delete_job(self, job_name):
         """
         Delete Jenkins job
         """
         print("Deleting job: %s" % job_name)
-        self.api.delete_job(jobname=job_name)
+        if not self.preview:
+            self.api.delete_job(jobname=job_name)
 
     def create_view(self, view_name):
         """
         Create Jenkins view with specific view name
         """
         print("Creating view: %s" % view_name)
-        view = self.api.views.create(view_name)
-        return view
+        if not self.preview:
+            view = self.api.views.create(view_name)
+            return view
+        return view_name
 
     def populate_view(self, view, job_name):
         """
         Add job to the Jenkins view
         """
-        view.add_job(job_name)
+        print("Adding job %s to view %s" % (job_name, view.__str__()))
+        if not self.preview:
+            view.add_job(job_name)
 
     def delete_view(self, view_name):
         """
         Delete Jenkins view
         """
         print("Deleting view: %s" % view_name)
-        del self.api.views[view_name]
+        if not self.preview:
+            del self.api.views[view_name]
 
     def update_jenkins_config(self):
         """
         Function that decides what Jenkins jobs and views
         should be created and what should be deleted
         """
+        if self.preview:
+            print("Going to run in the PREVIEW mode")
+
         created_jobs = []
         created_views = []
 
@@ -220,11 +232,16 @@ def parse_args():
                         type=str,
                         help="Git repository location",
                         default=config_parser.get('repository', 'path'))
-    parser.add_argument("-t", "--template",
+    parser.add_argument("-t", "--template-name",
                         dest="template_name",
                         type=str,
                         help="Jenkins job template name",
                         default=config_parser.get('template', 'name'))
+    parser.add_argument("--template-location",
+                        dest="template_location",
+                        type=str,
+                        help="Jenkins job template location",
+                        default=config_parser.get('template', 'location'))
     parser.add_argument("--job-prefix",
                         dest="job_prefix",
                         type=str,
@@ -245,6 +262,10 @@ def parse_args():
                         type=str,
                         help="Jenkins view suffix",
                         default=config_parser.get('view', 'suffix'))
+    parser.add_argument("--dry-run", "--preview",
+                        action="store_true",
+                        dest="preview",
+                        help="Execute script in preview mode, without actually modifying Jenkins configuration")
 
     args = parser.parse_args()
     return args
@@ -260,11 +281,13 @@ def main():
                            args.jenkins_username,
                            args.jenkins_password,
                            args.repository_path,
+                           args.template_location,
                            args.template_name,
                            args.job_prefix,
                            args.job_suffix,
                            args.view_prefix,
-                           args.view_suffix)
+                           args.view_suffix,
+                           args.preview)
     jenkins.get_existing_jobs_list()
     jenkins.get_existing_views()
     jenkins.get_branches()
